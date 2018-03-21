@@ -1,0 +1,134 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:mask="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/margin_card"
+    tools:context="ru.com.penza.school58.AddCardFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:id="@+id/image_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true">
+
+            <ImageView
+                android:id="@+id/person_photo"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="@dimen/margin_card"
+                android:layout_marginTop="@dimen/margin_card"
+                android:scaleType="centerCrop"
+                android:src="@drawable/student" />
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/image_container">
+
+            <TextView
+                android:id="@+id/labelName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="@dimen/margin_card"
+                android:labelFor="@+id/name"
+                android:text="@string/name" />
+
+            <EditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/labelName"
+                android:layout_marginStart="@dimen/margin_card"
+                android:hint="@string/namePattern"
+                android:imeOptions="actionNext"
+                android:nextFocusForward="@id/card"
+                android:inputType="text" />
+
+
+            <TextView
+                android:id="@+id/labelCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/name"
+                android:layout_marginStart="@dimen/margin_card"
+                android:labelFor="@+id/phone"
+                android:text="@string/label_card" />
+
+            <ru.com.penza.school58.views.MaskedEditText
+                android:id="@+id/card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/labelCard"
+                android:layout_marginStart="@dimen/margin_card"
+                android:imeOptions="actionNext"
+                android:nextFocusForward="@id/mainThreshold"
+                android:inputType="number"
+                mask:allowed_chars="1234567890"
+                mask:mask="##-######"
+                />
+
+
+
+            <TextView
+                android:id="@+id/labelMainThreshold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/card"
+                android:layout_marginStart="@dimen/margin_card"
+                android:labelFor="@+id/lastName"
+                android:text="@string/label_main_threshold" />
+
+            <EditText
+                android:id="@+id/mainThreshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/labelMainThreshold"
+                android:layout_marginStart="@dimen/margin_card"
+                android:hint="@string/zero"
+                android:imeOptions="actionNext"
+                android:nextFocusForward="@id/addThreshold"
+                android:inputType="number" />
+
+            <TextView
+                android:id="@+id/labelAddThreshold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/mainThreshold"
+                android:layout_marginStart="@dimen/margin_card"
+                android:labelFor="@+id/lastName"
+                android:text="@string/label_add_threshold" />
+
+            <EditText
+                android:id="@+id/addThreshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/labelAddThreshold"
+                android:layout_marginStart="@dimen/margin_card"
+                android:hint="@string/zero"
+                android:imeOptions="actionDone"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/addThreshold"
+                android:layout_marginEnd="@dimen/margin_card"
+                android:layout_marginStart="@dimen/margin_card"
+                android:text="@string/btn_save" />
+
+        </RelativeLayout>
+    </RelativeLayout>
+</ScrollView>

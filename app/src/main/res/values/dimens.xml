@@ -1,0 +1,9 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="margin_card">10dp</dimen>
+    <dimen name="margin_card_vert">5dp</dimen>
+    <dimen name="corner_radius">5dp</dimen>
+    <dimen name="margin_card_layout">5dp</dimen>
+    <dimen name="text_size_surname">20sp</dimen>
+    <dimen name="text_size_message">18sp</dimen>
+</resources>
