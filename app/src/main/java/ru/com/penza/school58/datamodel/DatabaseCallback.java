@@ -16,4 +16,6 @@ public interface DatabaseCallback {
     void onDataNotAvailable();
 
     void onCardUpdated();
+
+    void onCardLoaded(Card card);
 }

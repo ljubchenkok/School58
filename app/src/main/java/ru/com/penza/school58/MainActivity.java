@@ -3,27 +3,36 @@ package ru.com.penza.school58;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.Html;
+
+import java.util.ArrayList;
+import 	java.util.regex.Pattern;
+
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ru.com.penza.school58.datamodel.Card;
 import ru.com.penza.school58.datamodel.DatabaseCallback;
 import ru.com.penza.school58.datamodel.LocalCacheManager;
+import ru.com.penza.school58.datamodel.Message;
 import ru.com.penza.school58.views.MyRecycleViewAdapter;
+import ru.com.penza.school58.web.ApiUtils;
+import ru.com.penza.school58.web.SOService;
+
 
 public class MainActivity extends AppCompatActivity implements DatabaseCallback {
     @BindView(R.id.fab)
@@ -31,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
     Unbinder unbinder;
     @BindView(R.id.recycle_view)
     RecyclerView recyclerView;
+    List<Card> cards;
+    private MyRecycleViewAdapter adapter;
 
 
     @Override
@@ -82,14 +93,52 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
                 card.setMainThreshold(data.getStringExtra(Constants.KEY_MAIN_THRESHOLD));
                 card.setAddThreshold(data.getStringExtra(Constants.KEY_ADD_THRESHOLD));
                 LocalCacheManager.getInstance(this).addCard(this,card);
+                LocalCacheManager.getInstance(this).findCardbyName(this,card.getName(),card.getCard());
+
+
+
+
             }
         }
     }
 
     @Override
-    public void onCardsLoaded(List<Card> cards) {
-        recyclerView.setAdapter(new MyRecycleViewAdapter(cards, this));
+    public void onCardsLoaded(final List<Card> cards) {
+        this.cards = cards;
+        intitRecyclerView();
+
+    }
+
+    ItemTouchHelper.SimpleCallback itemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+        @Override
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+        @Override
+        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+            final int position = viewHolder.getAdapterPosition();
+            deleteCard(cards.get(position));
+        }
+    };
+
+    private void deleteCard(Card card){
+        LocalCacheManager.getInstance(this).deleteCard(this,card);
+        int index = cards.indexOf(card);
+        cards.remove(card);
+        adapter.notifyItemRemoved(index);
+
+
+    }
+
+
+
+    private void intitRecyclerView() {
+        adapter = new MyRecycleViewAdapter(cards, this);
+        recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(itemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 
     @Override
@@ -110,6 +159,14 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
 
     @Override
     public void onCardUpdated() {
+
+    }
+
+    @Override
+    public void onCardLoaded(Card card) {
+        cards.add(card);
+        adapter.setCards(cards);
+        adapter.notifyItemInserted(cards.size()-1);
 
     }
 }

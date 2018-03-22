@@ -9,6 +9,8 @@ import java.util.List;
 
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
+import io.reactivex.Maybe;
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
@@ -39,8 +41,17 @@ public class LocalCacheManager {
     public void getCards(final DatabaseCallback databaseCallback) {
         db.cardDao().getAll().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<List<Card>>() {
             @Override
-            public void accept(@io.reactivex.annotations.NonNull List<Card> Cards) throws Exception {
-                databaseCallback.onCardsLoaded(Cards);
+            public void accept(@io.reactivex.annotations.NonNull List<Card> cards) throws Exception {
+                databaseCallback.onCardsLoaded(cards);
+
+            }
+        });
+    }
+    public void findCardbyName(final DatabaseCallback databaseCallback, String name, String card) {
+        db.cardDao().findByName(name, card).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<Card>() {
+            @Override
+            public void accept(@io.reactivex.annotations.NonNull Card card) throws Exception {
+                databaseCallback.onCardLoaded(card);
 
             }
         });
@@ -96,9 +107,7 @@ public class LocalCacheManager {
 
 
     public void updateCard(final DatabaseCallback databaseCallback, final Card card) {
-        card.setName("Max");
-        card.setCard("11-2222222");
-        Completable.fromAction(new Action() {
+           Completable.fromAction(new Action() {
             @Override
             public void run() throws Exception {
                 db.cardDao().updateCards(card);

@@ -19,6 +19,17 @@ public class Card {
     private String mainThreshold;
     @ColumnInfo(name = "addthreshold")
     private String addThreshold;
+    @ColumnInfo(name = "message")
+    private String message;
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+
+        return message;
+    }
 
     public int getId() {
         return id;

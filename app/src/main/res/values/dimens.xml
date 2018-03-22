@@ -5,5 +5,5 @@
     <dimen name="corner_radius">5dp</dimen>
     <dimen name="margin_card_layout">5dp</dimen>
     <dimen name="text_size_surname">20sp</dimen>
-    <dimen name="text_size_message">18sp</dimen>
+    <dimen name="text_size_message">14sp</dimen>
 </resources>
