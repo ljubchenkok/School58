@@ -22,10 +22,10 @@ public interface CardDao {
     Flowable<List<Card>> loadAllByIds(int[] cardIds);
 
     @Query("SELECT * FROM card WHERE name LIKE :name AND "
-            + "card LIKE :card LIMIT 1")
-    Maybe<Card> findByName(String name, String card);
+            + "cardNumber LIKE :cardNumber LIMIT 1")
+    Maybe<Card> findByName(String name, String cardNumber);
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(Card... cards);
 
     @Delete

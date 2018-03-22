@@ -13,8 +13,8 @@ public class Card {
     private int id;
     @ColumnInfo(name = "name")
     private String name;
-    @ColumnInfo(name = "card")
-    private String card;
+    @ColumnInfo(name = "cardNumber")
+    private String cardNumber;
     @ColumnInfo(name = "mainthreshold")
     private String mainThreshold;
     @ColumnInfo(name = "addthreshold")
@@ -44,7 +44,7 @@ public class Card {
 
     public Card(String name, String card, String mainThreshold, String addThreshold) {
         this.name = name;
-        this.card = card;
+        this.cardNumber = card;
         this.mainThreshold = mainThreshold;
         this.addThreshold = addThreshold;
     }
@@ -53,8 +53,8 @@ public class Card {
         this.name = name;
     }
 
-    public void setCard(String card) {
-        this.card = card;
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
     }
 
     public void setMainThreshold(String mainThreshold) {
@@ -70,8 +70,8 @@ public class Card {
         return name;
     }
 
-    public String getCard() {
-        return card;
+    public String getCardNumber() {
+        return cardNumber;
     }
 
     public String getMainThreshold() {
@@ -80,6 +80,13 @@ public class Card {
 
     public String getAddThreshold() {
         return addThreshold;
+    }
+
+    public boolean isEqual(Card card){
+        boolean result = card.getId() == id;
+        result = result && card.getName().equals(name);
+        result = result && card.getCardNumber().equals(cardNumber);
+        return  result;
     }
 
 }

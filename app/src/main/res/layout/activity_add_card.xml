@@ -53,7 +53,7 @@
                 android:layout_marginStart="@dimen/margin_card"
                 android:hint="@string/namePattern"
                 android:imeOptions="actionNext"
-                android:nextFocusForward="@id/card"
+                android:nextFocusForward="@id/cardNumber"
                 android:inputType="text" />
 
 
@@ -67,7 +67,7 @@
                 android:text="@string/label_card" />
 
             <ru.com.penza.school58.views.MaskedEditText
-                android:id="@+id/card"
+                android:id="@+id/cardNumber"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/labelCard"
@@ -85,7 +85,7 @@
                 android:id="@+id/labelMainThreshold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/card"
+                android:layout_below="@+id/cardNumber"
                 android:layout_marginStart="@dimen/margin_card"
                 android:labelFor="@+id/lastName"
                 android:text="@string/label_main_threshold" />

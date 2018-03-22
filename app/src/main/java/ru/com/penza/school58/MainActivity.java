@@ -8,10 +8,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.text.Html;
-
-import java.util.ArrayList;
-import 	java.util.regex.Pattern;
 
 import android.view.View;
 import android.view.Menu;
@@ -22,19 +18,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import ru.com.penza.school58.datamodel.Card;
 import ru.com.penza.school58.datamodel.DatabaseCallback;
 import ru.com.penza.school58.datamodel.LocalCacheManager;
-import ru.com.penza.school58.datamodel.Message;
 import ru.com.penza.school58.views.MyRecycleViewAdapter;
-import ru.com.penza.school58.web.ApiUtils;
-import ru.com.penza.school58.web.SOService;
 
 
-public class MainActivity extends AppCompatActivity implements DatabaseCallback {
+public class MainActivity extends AppCompatActivity implements DatabaseCallback, MyRecycleViewAdapter.OnItemClickListener {
     @BindView(R.id.fab)
     FloatingActionButton fab;
     Unbinder unbinder;
@@ -89,15 +79,24 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
             if (resultCode == RESULT_OK) {
                 Card card = new Card();
                 card.setName(data.getStringExtra(Constants.KEY_NAME));
-                card.setCard(data.getStringExtra(Constants.KEY_CARD));
+                card.setCardNumber(data.getStringExtra(Constants.KEY_CARD));
+                int position = data.getIntExtra(Constants.KEY_POSITION, -1);
                 card.setMainThreshold(data.getStringExtra(Constants.KEY_MAIN_THRESHOLD));
                 card.setAddThreshold(data.getStringExtra(Constants.KEY_ADD_THRESHOLD));
-                LocalCacheManager.getInstance(this).addCard(this,card);
-                LocalCacheManager.getInstance(this).findCardbyName(this,card.getName(),card.getCard());
+                if (position == -1){
+                    LocalCacheManager.getInstance(this).addCard(this,card);
+                    LocalCacheManager.getInstance(this).findCardbyName(this,card.getName(),card.getCardNumber());
+                }
+                else {
 
+                    card.setId(cards.get(position).getId());
+                    if (!cards.get(position).isEqual(card)) {
+                        cards.set(position, card);
+                        LocalCacheManager.getInstance(this).updateCard(this, card);
+                        adapter.notifyItemChanged(position);
+                    }
 
-
-
+                }
             }
         }
     }
@@ -167,6 +166,19 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
         cards.add(card);
         adapter.setCards(cards);
         adapter.notifyItemInserted(cards.size()-1);
+
+    }
+
+    @Override
+    public void onItemClick(Card card, MyRecycleViewAdapter.CardViewHolder holder) {
+        Intent intent = new Intent(this, AddCardActivity.class);
+        intent.putExtra(Constants.KEY_NAME,card.getName());
+        intent.putExtra(Constants.KEY_POSITION,cards.indexOf(card));
+        intent.putExtra(Constants.KEY_CARD,card.getCardNumber());
+        intent.putExtra(Constants.KEY_MAIN_THRESHOLD,card.getMainThreshold());
+        intent.putExtra(Constants.KEY_ADD_THRESHOLD,card.getAddThreshold());
+        startActivityForResult(intent, Constants.ADD_CARD);
+
 
     }
 }

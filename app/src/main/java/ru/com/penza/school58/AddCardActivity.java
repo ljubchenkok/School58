@@ -22,24 +22,33 @@ public class AddCardActivity extends AppCompatActivity{
 
     @BindView(R.id.name)
     EditText editName;
-    @BindView(R.id.card)
+    @BindView(R.id.cardNumber)
     MaskedEditText editCard;
     @BindView(R.id.mainThreshold)
     EditText editMainThreshold;
     @BindView(R.id.addThreshold)
     EditText editAddThreshold;
     Unbinder unbinder;
+    private int position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_card);
         unbinder = ButterKnife.bind(this);
+        Intent intent = getIntent();
+        position = intent.getIntExtra(Constants.KEY_POSITION, -1);
+        editName.setText(intent.getStringExtra(Constants.KEY_NAME));
+        editCard.setText(intent.getStringExtra(Constants.KEY_CARD));
+        editMainThreshold.setText(intent.getStringExtra(Constants.KEY_MAIN_THRESHOLD));
+        editAddThreshold.setText(intent.getStringExtra(Constants.KEY_ADD_THRESHOLD));
+
     }
 
     @OnClick(R.id.btnSave)
     public void onSave() {
         Intent intent = new Intent();
+        intent.putExtra(Constants.KEY_POSITION, position);
         intent.putExtra(Constants.KEY_NAME, editName.getText().toString());
         intent.putExtra(Constants.KEY_CARD, editCard.getText().toString());
         intent.putExtra(Constants.KEY_MAIN_THRESHOLD, editMainThreshold.getText().toString());

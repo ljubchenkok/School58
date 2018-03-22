@@ -30,11 +30,16 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
     private static final String ACT = "FreeCheckBalance" ;
     private static final String BALANCE = "balance" ;
     List<Card> cards;
-    private Context context;
+    private OnItemClickListener listener;
 
-    public MyRecycleViewAdapter(List<Card> cards, Context context) {
+    public interface OnItemClickListener {
+        void onItemClick(Card card, CardViewHolder holder);
+    }
+
+
+    public MyRecycleViewAdapter(List<Card> cards, OnItemClickListener listener) {
         this.cards=cards;
-        this.context=context;
+        this.listener=listener;
     }
 
 
@@ -42,7 +47,7 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
     @NonNull
     @Override
     public CardViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.single_card, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_card, parent, false);
         return new CardViewHolder(view);
 
     }
@@ -54,9 +59,16 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
     @Override
     public void onBindViewHolder(@NonNull final CardViewHolder holder, final int position) {
         holder.name.setText(cards.get(position).getName());
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listener.onItemClick(cards.get(holder.getAdapterPosition()), holder);
+
+            }
+        });
         holder.message.setText(cards.get(position).getMessage());
         SOService service = ApiUtils.getSOService();
-        service.getAnswer(cards.get(position).getCard(), ACT).enqueue(new Callback<Message>() {
+        service.getAnswer(cards.get(position).getCardNumber(), ACT).enqueue(new Callback<Message>() {
             @Override
             public void onResponse(Call<Message> call, Response<Message> response) {
                 String message;

@@ -5,6 +5,7 @@ package ru.com.penza.school58;
  */
 
 public class Constants {
+    public static final String KEY_POSITION = "position";
     public static final String KEY_NAME = "name";
     public static final String KEY_CARD = "card";
     public static final String KEY_MAIN_THRESHOLD = "main_threshold";
