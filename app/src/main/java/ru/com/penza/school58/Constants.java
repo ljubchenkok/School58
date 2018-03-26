@@ -13,4 +13,7 @@ public class Constants {
     public static final int ADD_CARD = 1;
     public static final String KEY_IMAGE = "image";
     public static final String KEY_COLOR = "color";
+    public static final String TRANSITION_PHOTO_NAME = "transition_name_for_photo";
+    public static final String TRANSITION_CONTAINER_NAME = "transition_name_for_container";
+    public static final String KEY_ID = "id";
 }

@@ -18,6 +18,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -82,10 +83,17 @@ public class AddCardActivity extends AppCompatActivity{
         if (position != -1){
             setTitle(R.string.edit_label);
         }
+        Integer id = intent.getIntExtra(Constants.KEY_ID, -1);
         imageURL = intent.getStringExtra(Constants.KEY_IMAGE);
         cardColor = intent.getIntExtra(Constants.KEY_COLOR, Color.WHITE);
         editName.setText(intent.getStringExtra(Constants.KEY_NAME));
         editCard.setText(intent.getStringExtra(Constants.KEY_CARD));
+        if(id !=-1) {
+            String transitionNameforPhoto = Constants.TRANSITION_PHOTO_NAME + String.valueOf(id);
+            String transitionNameforContainer = Constants.TRANSITION_CONTAINER_NAME + String.valueOf(id);
+            imageView.setTransitionName(transitionNameforPhoto);
+            imageContainer.setTransitionName(transitionNameforContainer );
+        }
         showImage();
         initPreferences(intent);
 
@@ -235,5 +243,16 @@ public class AddCardActivity extends AppCompatActivity{
 
             }
         }
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home){
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

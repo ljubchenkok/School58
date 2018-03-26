@@ -145,6 +145,8 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
         public ImageView imageView;
         @BindView(R.id.card_view)
         public CardView cardView;
+        @BindView(R.id.image_container)
+        public RelativeLayout imageContainer;
 
         public CardViewHolder(View view) {
             super(view);

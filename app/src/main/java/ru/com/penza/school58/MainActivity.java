@@ -1,5 +1,7 @@
 package ru.com.penza.school58;
 
+import android.annotation.SuppressLint;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -12,9 +14,12 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
+import android.transition.Explode;
+import android.util.Pair;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -53,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         setContentView(R.layout.activity_main);
         unbinder = ButterKnife.bind(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -268,9 +274,27 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void onItemClick(Card card, MyRecycleViewAdapter.CardViewHolder holder) {
+
+        String transitionNameforPhoto = Constants.TRANSITION_PHOTO_NAME + String.valueOf(card.getId());
+        String transitionNameforContainer = Constants.TRANSITION_CONTAINER_NAME + String.valueOf(card.getId());
+//        ActivityOptions options = ActivityOptions
+//                .makeSceneTransitionAnimation(this,
+//                Pair.create((View)holder.imageView, transitionNameforPhoto),
+//                Pair.create((View) holder.imageContainer, transitionNameforContainer));
+
+        ActivityOptions options = ActivityOptions
+                .makeSceneTransitionAnimation(this, holder.imageView, transitionNameforPhoto);
+
+        getWindow().setExitTransition(new Explode());
+        getWindow().setEnterTransition(new Explode());
+        getWindow().setSharedElementEnterTransition(new Explode());
+        getWindow().setSharedElementExitTransition(new Explode());
+
         Intent intent = new Intent(this, AddCardActivity.class);
+        intent.putExtra(Constants.KEY_ID, card.getId());
         intent.putExtra(Constants.KEY_NAME,card.getName());
         intent.putExtra(Constants.KEY_POSITION,cards.indexOf(card));
         intent.putExtra(Constants.KEY_CARD,card.getCardNumber());
@@ -279,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         intent.putExtra(Constants.KEY_COLOR, card.getColor());
         if (card.getImageURL() != null)
         intent.putExtra(Constants.KEY_IMAGE, card.getImageURL());
-        startActivityForResult(intent, Constants.ADD_CARD);
+        startActivityForResult(intent, Constants.ADD_CARD, options.toBundle());
 
 
     }
