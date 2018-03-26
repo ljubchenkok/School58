@@ -19,7 +19,7 @@
         android:layout_margin="@dimen/margin_card_layout">
 
         <ImageView
-            android:id="@+id/person_photo"
+            android:id="@+id/image"
             android:src="@drawable/student"
             android:layout_width="80dp"
             android:layout_height="80dp"
@@ -32,7 +32,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/person_photo">
+            android:layout_toEndOf="@+id/image">
 
             <TextView
                 android:id="@+id/name"

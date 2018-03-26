@@ -1,5 +1,6 @@
 package ru.com.penza.school58.views;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 import static android.content.ContentValues.TAG;
@@ -75,14 +77,25 @@ public class MaskedEditText extends AppCompatEditText implements TextWatcher {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 switch (actionId) {
 				case EditorInfo.IME_ACTION_NEXT:
-                    // fixing actionNext
 					return false;
+                case EditorInfo.IME_ACTION_DONE:
+                    hideSoftKeyboard();
+                    return true;
                     default:
                         return true;
                 }
             }
         });
         attributes.recycle();
+    }
+
+    private void hideSoftKeyboard() {
+        View currentFocus = ((Activity)getContext()).getWindow().getCurrentFocus();
+        if (currentFocus != null) {
+            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            assert imm != null;
+            imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+        }
     }
 
     @Override

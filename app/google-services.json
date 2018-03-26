@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "795905998181",
+    "firebase_url": "https://school58-d7a30.firebaseio.com",
+    "project_id": "school58-d7a30",
+    "storage_bucket": "school58-d7a30.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:795905998181:android:f5d6182ba6abe6b1",
+        "android_client_info": {
+          "package_name": "ru.com.penza.school58"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "795905998181-kfqfnt622l9bfvgbf2gcbbotiq1a3co2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ru.com.penza.school58",
+            "certificate_hash": "bc380a4b8368cda425394fbc19633d9317c611e4"
+          }
+        },
+        {
+          "client_id": "795905998181-5uv1gprau9mv8gbirahgdivsgqfakuvv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2RuZtH-QnLaOT2yQ79fweyNYpWy0ObNc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "795905998181-5uv1gprau9mv8gbirahgdivsgqfakuvv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

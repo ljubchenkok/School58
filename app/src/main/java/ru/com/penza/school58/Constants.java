@@ -11,4 +11,6 @@ public class Constants {
     public static final String KEY_MAIN_THRESHOLD = "main_threshold";
     public static final String KEY_ADD_THRESHOLD = "add_threshold";
     public static final int ADD_CARD = 1;
+    public static final String KEY_IMAGE = "image";
+    public static final String KEY_COLOR = "color";
 }

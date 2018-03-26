@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">School58</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Настройки</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
@@ -13,4 +13,12 @@
     <string name="label_add_threshold">Порог (доп. питание)</string>
     <string name="zero">0</string>
     <string name="label_name">Максимка</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <string name="key_notification">key_notification</string>
+    <string name="notificationLabel">Уведомления</string>
+    <string name="key_token">key_token</string>
+    <string name="app_label">Школьные карты</string>
+    <string name="add_label">Добавить карту</string>
+    <string name="edit_label">Редактировать карту</string>
 </resources>
