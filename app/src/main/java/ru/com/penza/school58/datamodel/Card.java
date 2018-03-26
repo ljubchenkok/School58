@@ -4,6 +4,7 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 
 @Entity
@@ -23,7 +24,7 @@ public class Card {
     @ColumnInfo(name = "message")
     private String message;
     @ColumnInfo(name = "color")
-    private Integer color;
+    private Integer color = Color.WHITE;
     @ColumnInfo(name = "imageURL")
     private String imageURL;
 
@@ -114,6 +115,8 @@ public class Card {
         result = result && card.getCardNumber().equals(cardNumber);
         result = result && card.getMainThreshold() == mainThreshold;
         result = result && card.getAddThreshold() == addThreshold;
+        result = result && card.getColor() == color;
+        result = result && card.getImageURL().equals(imageURL);
         return result;
     }
 

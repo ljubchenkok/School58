@@ -3,6 +3,7 @@ package ru.com.penza.school58.views;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -74,7 +76,11 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
             }
         });
         holder.message.setText(cards.get(position).getMessage());
+        if (cards.get(position).getColor() != null) {
+            holder.cardView.setCardBackgroundColor(cards.get(position).getColor());
+        }
         String imageURL = cards.get(position).getImageURL();
+
         if (imageURL == null) {
             Picasso.with(context).load(R.drawable.student).transform(new CropCircleTransformation())
                     .into(holder.imageView);
@@ -137,6 +143,8 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
         public ProgressBar progressBar;
         @BindView(R.id.image)
         public ImageView imageView;
+        @BindView(R.id.card_view)
+        public CardView cardView;
 
         public CardViewHolder(View view) {
             super(view);

@@ -2,6 +2,7 @@ package ru.com.penza.school58;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -152,6 +153,8 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
                 int position = data.getIntExtra(Constants.KEY_POSITION, -1);
                 card.setMainThreshold(data.getIntExtra(Constants.KEY_MAIN_THRESHOLD,0));
                 card.setAddThreshold(data.getIntExtra(Constants.KEY_ADD_THRESHOLD,0));
+                card.setColor(data.getIntExtra(Constants.KEY_COLOR, Color.WHITE));
+                card.setImageURL(data.getStringExtra(Constants.KEY_IMAGE));
                 if (position == -1){
                     LocalCacheManager.getInstance(this).addCard(this,card);
                     LocalCacheManager.getInstance(this).findCardbyName(this,card.getName(),card.getCardNumber());
@@ -223,10 +226,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         int index = cards.indexOf(card);
         cards.remove(card);
         adapter.notifyItemRemoved(index);
-
-
     }
-
 
 
     private void intitRecyclerView() {
@@ -276,6 +276,9 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         intent.putExtra(Constants.KEY_CARD,card.getCardNumber());
         intent.putExtra(Constants.KEY_MAIN_THRESHOLD,card.getMainThreshold());
         intent.putExtra(Constants.KEY_ADD_THRESHOLD,card.getAddThreshold());
+        intent.putExtra(Constants.KEY_COLOR, card.getColor());
+        if (card.getImageURL() != null)
+        intent.putExtra(Constants.KEY_IMAGE, card.getImageURL());
         startActivityForResult(intent, Constants.ADD_CARD);
 
 
