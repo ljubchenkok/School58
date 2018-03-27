@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
                     card.setId(cards.get(position).getId());
                     if (!cards.get(position).isEqual(card)) {
                         cards.set(position, card);
-                        //LocalCacheManager.getInstance(this).updateCard(this, card);
+                        LocalCacheManager.getInstance(this).updateCard(this, card);
                         adapter.notifyItemChanged(position);
                     }
 
