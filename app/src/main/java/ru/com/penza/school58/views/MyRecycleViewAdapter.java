@@ -25,6 +25,7 @@ import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ru.com.penza.school58.Constants;
 import ru.com.penza.school58.R;
 import ru.com.penza.school58.datamodel.Card;
 import ru.com.penza.school58.datamodel.Message;
@@ -68,6 +69,8 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
     @Override
     public void onBindViewHolder(@NonNull final CardViewHolder holder, final int position) {
         holder.name.setText(cards.get(position).getName());
+        holder.imageView.setTransitionName(Constants.TRANSITION_PHOTO_NAME + String.valueOf(cards.get(position).getId()));
+        holder.imageContainer.setTransitionName(Constants.TRANSITION_CONTAINER_NAME + String.valueOf(cards.get(position).getId()));
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

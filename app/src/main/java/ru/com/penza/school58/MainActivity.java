@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,7 +16,8 @@ import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
 import android.transition.Explode;
-import android.util.Pair;
+import android.support.v4.util.Pair;
+//import android.util.Pair;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +30,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -64,6 +67,13 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         LocalCacheManager.getInstance(this).getCards(this);
+        //testing
+//        Card card = new Card("Влад", "35-000238", 0,0);
+//        card.setId(100);
+//        cards = new ArrayList<>();
+//        cards.add(card);
+//        intitRecyclerView();
+        ////
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         token_key = sharedPreferences.getString(getString(R.string.key_token), null);
@@ -170,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
                     card.setId(cards.get(position).getId());
                     if (!cards.get(position).isEqual(card)) {
                         cards.set(position, card);
-                        LocalCacheManager.getInstance(this).updateCard(this, card);
+                        //LocalCacheManager.getInstance(this).updateCard(this, card);
                         adapter.notifyItemChanged(position);
                     }
 
@@ -276,23 +286,16 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     @SuppressLint("RestrictedApi")
     @Override
-    public void onItemClick(Card card, MyRecycleViewAdapter.CardViewHolder holder) {
+    public void onItemClick(Card card, final MyRecycleViewAdapter.CardViewHolder holder) {
 
         String transitionNameforPhoto = Constants.TRANSITION_PHOTO_NAME + String.valueOf(card.getId());
         String transitionNameforContainer = Constants.TRANSITION_CONTAINER_NAME + String.valueOf(card.getId());
-//        ActivityOptions options = ActivityOptions
-//                .makeSceneTransitionAnimation(this,
-//                Pair.create((View)holder.imageView, transitionNameforPhoto),
-//                Pair.create((View) holder.imageContainer, transitionNameforContainer));
-
-        ActivityOptions options = ActivityOptions
-                .makeSceneTransitionAnimation(this, holder.imageView, transitionNameforPhoto);
-
-        getWindow().setExitTransition(new Explode());
-        getWindow().setEnterTransition(new Explode());
+        Pair<View, String> p1 = Pair.create((View)holder.imageView, transitionNameforPhoto);
+        Pair<View, String> p2 = Pair.create((View)holder.imageContainer, transitionNameforContainer);
+        ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(this, p1);
         getWindow().setSharedElementEnterTransition(new Explode());
         getWindow().setSharedElementExitTransition(new Explode());
-
         Intent intent = new Intent(this, AddCardActivity.class);
         intent.putExtra(Constants.KEY_ID, card.getId());
         intent.putExtra(Constants.KEY_NAME,card.getName());

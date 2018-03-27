@@ -1,7 +1,5 @@
 package ru.com.penza.school58;
 
-import android.arch.persistence.room.Room;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,20 +10,20 @@ import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.support.v4.graphics.ColorUtils;
-import android.support.v4.media.session.IMediaSession;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -38,10 +36,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import jp.wasabeef.picasso.transformations.CropCircleTransformation;
-import ru.com.penza.school58.datamodel.AppDatabase;
-import ru.com.penza.school58.datamodel.Card;
-import ru.com.penza.school58.datamodel.DatabaseCallback;
-import ru.com.penza.school58.datamodel.LocalCacheManager;
 import ru.com.penza.school58.views.MaskedEditText;
 import yuku.ambilwarna.AmbilWarnaDialog;
 
@@ -73,10 +67,14 @@ public class AddCardActivity extends AppCompatActivity{
     private String imageURL;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_card);
+        getWindow().setSharedElementEnterTransition(new MyTransitionSet());
+        getWindow().setSharedElementExitTransition(new MyTransitionSet());
+        postponeEnterTransition();
         unbinder = ButterKnife.bind(this);
         Intent intent = getIntent();
         position = intent.getIntExtra(Constants.KEY_POSITION, -1);
@@ -94,23 +92,54 @@ public class AddCardActivity extends AppCompatActivity{
             imageView.setTransitionName(transitionNameforPhoto);
             imageContainer.setTransitionName(transitionNameforContainer );
         }
+        imageContainer.setBackgroundColor(cardColor);
         showImage();
         initPreferences(intent);
-
     }
 
-    private void showImage() {
+    @Override
+    public void onActivityReenter(int resultCode, Intent data) {
+        super.onActivityReenter(resultCode, data);
+        scheduleStartPostponedTransition(imageView);
+    }
+
+
+    private void showImage(){
         if (imageURL == null) {
             Picasso.with(this).load(R.drawable.student)
                     .transform(new CropCircleTransformation())
-                    .into(imageView);
-        } else {
+                    .into(imageView, myPicassoCallBack);
+        }else {
             Picasso.with(this).load(Uri.parse(imageURL))
                     .transform(new CropCircleTransformation())
-                    .into(imageView);
+                    .into(imageView, myPicassoCallBack);
         }
-        imageContainer.setBackgroundColor(cardColor);
     }
+
+    private Callback myPicassoCallBack = new Callback() {
+        @Override
+        public void onSuccess() {
+            scheduleStartPostponedTransition(imageView);
+        }
+
+        @Override
+        public void onError() {
+
+        }
+    };
+
+    private void scheduleStartPostponedTransition(final View sharedElement) {
+        sharedElement.getViewTreeObserver().addOnPreDrawListener(
+                new ViewTreeObserver.OnPreDrawListener() {
+                    @Override
+                    public boolean onPreDraw() {
+                        sharedElement.getViewTreeObserver().removeOnPreDrawListener(this);
+                        startPostponedEnterTransition();
+                        return true;
+                    }
+                });
+    }
+
 
     private void initPreferences(Intent intent) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -142,7 +171,8 @@ public class AddCardActivity extends AppCompatActivity{
         intent.putExtra(Constants.KEY_IMAGE, imageURL);
         intent.putExtra(Constants.KEY_COLOR, cardColor);
         setResult(RESULT_OK,intent);
-        finish();
+        supportFinishAfterTransition();
+
     }
 
     @OnClick(R.id.image)
