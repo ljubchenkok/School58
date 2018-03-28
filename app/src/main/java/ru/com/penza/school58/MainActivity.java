@@ -260,6 +260,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     @Override
     public void onCardAdded() {
+        sendDataToFirebase();
 
 
     }

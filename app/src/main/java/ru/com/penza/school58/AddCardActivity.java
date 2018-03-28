@@ -208,7 +208,7 @@ public class AddCardActivity extends AppCompatActivity{
     }
 
     private void chooseColor() {
-        AmbilWarnaDialog dialog = new AmbilWarnaDialog(this, Color.WHITE, true, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+        AmbilWarnaDialog dialog = new AmbilWarnaDialog(this, cardColor, true, new AmbilWarnaDialog.OnAmbilWarnaListener() {
             @Override
             public void onOk(AmbilWarnaDialog dialog, int color) {
                 cardColor= color;
