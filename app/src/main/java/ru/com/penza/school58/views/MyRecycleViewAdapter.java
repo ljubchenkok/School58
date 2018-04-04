@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -88,7 +89,7 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
             Picasso.with(context).load(R.drawable.student).transform(new CropCircleTransformation())
                     .into(holder.imageView);
         } else {
-            Picasso.with(context).load(Uri.parse(imageURL)).transform(new CropCircleTransformation())
+            Picasso.with(context).load(new File(imageURL)).transform(new CropCircleTransformation())
                     .into(holder.imageView);
         }
         getBallance(holder, position);

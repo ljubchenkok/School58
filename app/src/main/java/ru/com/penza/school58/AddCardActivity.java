@@ -1,19 +1,21 @@
 package ru.com.penza.school58;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -22,11 +24,17 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +43,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import id.zelory.compressor.Compressor;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 import ru.com.penza.school58.views.MaskedEditText;
 import yuku.ambilwarna.AmbilWarnaDialog;
@@ -65,16 +77,17 @@ public class AddCardActivity extends AppCompatActivity{
     @BindView(R.id.image_container)
     public RelativeLayout imageContainer;
     private String imageURL;
-
+    private File compressedImage;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_card);
-        getWindow().setSharedElementEnterTransition(new MyTransitionSet());
-        getWindow().setSharedElementExitTransition(new MyTransitionSet());
         postponeEnterTransition();
+//        getWindow().setSharedElementEnterTransition(new MyTransitionSet());
+//        getWindow().setSharedElementExitTransition(new MyTransitionSet());
+//        postponeEnterTransition();
         unbinder = ButterKnife.bind(this);
         Intent intent = getIntent();
         position = intent.getIntExtra(Constants.KEY_POSITION, -1);
@@ -110,7 +123,7 @@ public class AddCardActivity extends AppCompatActivity{
                     .transform(new CropCircleTransformation())
                     .into(imageView, myPicassoCallBack);
         }else {
-            Picasso.with(this).load(Uri.parse(imageURL))
+            Picasso.with(this).load(new File(imageURL))
                     .transform(new CropCircleTransformation())
                     .into(imageView, myPicassoCallBack);
         }
@@ -263,17 +276,41 @@ public class AddCardActivity extends AppCompatActivity{
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == RESULT_LOAD_IMG) {
-                imageURL = data.getData().toString();
-                Picasso.with(this).load(data.getData()).transform(new CropCircleTransformation())
-                        .into(imageView);
+               setImage(data.getData());
             }
             if (requestCode == CAMERA_RESULT) {
-                Picasso.with(this).load(imageURL).transform(new CropCircleTransformation())
-                        .into(imageView);
+                setImage(null);
 
             }
         }
     }
+
+    private  void setImage(Uri uri){
+        File actualImage = null;
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+            try {
+                if (uri == null) {
+                    actualImage = FileUtil.from(this, Uri.parse(imageURL));
+                }else {
+                    actualImage = FileUtil.from(this, uri);
+                }
+                compressedImage = new Compressor(this).compressToFile(actualImage);
+                imageURL = getFilesDir().getPath() + FILE_NAME_BASE + timeStamp + ".jpg";
+                compressedImage.renameTo(new File(imageURL));
+                File newfile = new File(imageURL);
+                Picasso.with(this).load(newfile).transform(new CropCircleTransformation())
+                        .into(imageView);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+
+    }
+
+
 
 
     @Override
