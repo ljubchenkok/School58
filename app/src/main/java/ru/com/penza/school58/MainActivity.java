@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +17,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
+import android.telephony.TelephonyManager;
 import android.transition.Explode;
 import android.support.v4.util.Pair;
 //import android.util.Pair;
@@ -32,6 +35,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,8 +58,8 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     private MyRecycleViewAdapter adapter;
     DatabaseReference receiverRef;
     String token;
-    private String token_key;
     private static final int SETTINGS = 50;
+    boolean useNotification;
 
 
     @Override
@@ -76,58 +80,23 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         ////
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        token_key = sharedPreferences.getString(getString(R.string.key_token), null);
+        useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
         intitFirebase();
+
 
     }
 
     private void intitFirebase() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         receiverRef = database.getReference("receivers");
-        token = FirebaseInstanceId.getInstance().getToken();
-        if(token_key == null) {
-            receiverRef.addChildEventListener(initChildEventListener);
+        if (useNotification) {
+            token = FirebaseInstanceId.getInstance().getToken();
+        } else {
+            receiverRef.child(getDeviceId()).removeValue();
         }
 
     }
 
-    public void setToken_key(String token_key) {
-        this.token_key = token_key;
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor edit = sharedPreferences.edit();
-        edit.putString(getString(R.string.key_token),token_key);
-        edit.commit();
-    }
-
-    private ChildEventListener initChildEventListener = new ChildEventListener() {
-        @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            Receiver r = dataSnapshot.getValue(Receiver.class);
-            if (r.getToken().equals(token)) {
-                setToken_key(dataSnapshot.getKey());
-            }
-        }
-
-        @Override
-        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-        }
-
-        @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-
-        }
-    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -167,15 +136,17 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
                 card.setName(data.getStringExtra(Constants.KEY_NAME));
                 card.setCardNumber(data.getStringExtra(Constants.KEY_CARD));
                 int position = data.getIntExtra(Constants.KEY_POSITION, -1);
-                card.setMainThreshold(data.getIntExtra(Constants.KEY_MAIN_THRESHOLD,0));
-                card.setAddThreshold(data.getIntExtra(Constants.KEY_ADD_THRESHOLD,0));
+                card.setMainThreshold(data.getIntExtra(Constants.KEY_MAIN_THRESHOLD, 0));
+                card.setAddThreshold(data.getIntExtra(Constants.KEY_ADD_THRESHOLD, 0));
                 card.setColor(data.getIntExtra(Constants.KEY_COLOR, Color.WHITE));
                 card.setImageURL(data.getStringExtra(Constants.KEY_IMAGE));
-                if (position == -1){
-                    LocalCacheManager.getInstance(this).addCard(this,card);
-                    LocalCacheManager.getInstance(this).findCardbyName(this,card.getName(),card.getCardNumber());
-                }
-                else {
+                if (position == -1) {
+                    LocalCacheManager.getInstance(this).addCard(this, card);
+                    cards.add(card);
+                    adapter.setCards(cards);
+                    adapter.notifyItemInserted(cards.size() - 1);
+
+                } else {
 
                     card.setId(cards.get(position).getId());
                     if (!cards.get(position).isEqual(card)) {
@@ -187,14 +158,14 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
                 }
             }
         }
-        if (requestCode == SETTINGS){
+        if (requestCode == SETTINGS) {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            boolean useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
-            if (!useNotification && token_key!=null){
-                receiverRef.child(token_key).removeValue();
+            useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
+            if (!useNotification) {
+                receiverRef.child(getDeviceId()).removeValue();
             }
-            if (useNotification){
-               sendDataToFirebase();
+            if (useNotification) {
+                sendDataToFirebase();
             }
 
         }
@@ -203,13 +174,10 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     private void sendDataToFirebase() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
-        if (useNotification && token !=null) {
+        String deviceId = getDeviceId();
+        if (useNotification && token != null && deviceId != null) {
             Receiver receiver = new Receiver(token, cards);
-            if (token_key == null) {
-                receiverRef.push().setValue(receiver);
-            } else {
-                receiverRef.child(token_key).setValue(receiver);
-            }
+            receiverRef.child(deviceId).setValue(receiver);
         }
 
     }
@@ -233,12 +201,12 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
             final int position = viewHolder.getAdapterPosition();
             deleteCard(cards.get(position));
-            sendDataToFirebase();
+
         }
     };
 
-    private void deleteCard(Card card){
-        LocalCacheManager.getInstance(this).deleteCard(this,card);
+    private void deleteCard(Card card) {
+        LocalCacheManager.getInstance(this).deleteCard(this, card);
         int index = cards.indexOf(card);
         cards.remove(card);
         adapter.notifyItemRemoved(index);
@@ -255,14 +223,17 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     @Override
     public void onCardDeleted() {
+        if(useNotification) {
+            sendDataToFirebase();
+        }
 
     }
 
     @Override
     public void onCardAdded() {
-        sendDataToFirebase();
-
-
+        if(useNotification) {
+            sendDataToFirebase();
+        }
     }
 
     @Override
@@ -272,16 +243,15 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     @Override
     public void onCardUpdated() {
-        sendDataToFirebase();
+        if(useNotification) {
+            sendDataToFirebase();
+        }
 
     }
 
     @Override
     public void onCardLoaded(Card card) {
-        cards.add(card);
-        adapter.setCards(cards);
-        adapter.notifyItemInserted(cards.size()-1);
-        sendDataToFirebase();
+
 
     }
 
@@ -291,24 +261,40 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
         String transitionNameforPhoto = Constants.TRANSITION_PHOTO_NAME + String.valueOf(card.getId());
         String transitionNameforContainer = Constants.TRANSITION_CONTAINER_NAME + String.valueOf(card.getId());
-        Pair<View, String> p1 = Pair.create((View)holder.imageView, transitionNameforPhoto);
-        Pair<View, String> p2 = Pair.create((View)holder.imageContainer, transitionNameforContainer);
+        Pair<View, String> p1 = Pair.create((View) holder.imageView, transitionNameforPhoto);
+        Pair<View, String> p2 = Pair.create((View) holder.imageContainer, transitionNameforContainer);
         ActivityOptionsCompat options = ActivityOptionsCompat.
                 makeSceneTransitionAnimation(this, p1);
         getWindow().setSharedElementEnterTransition(new Explode());
         getWindow().setSharedElementExitTransition(new Explode());
         Intent intent = new Intent(this, AddCardActivity.class);
         intent.putExtra(Constants.KEY_ID, card.getId());
-        intent.putExtra(Constants.KEY_NAME,card.getName());
-        intent.putExtra(Constants.KEY_POSITION,cards.indexOf(card));
-        intent.putExtra(Constants.KEY_CARD,card.getCardNumber());
-        intent.putExtra(Constants.KEY_MAIN_THRESHOLD,card.getMainThreshold());
-        intent.putExtra(Constants.KEY_ADD_THRESHOLD,card.getAddThreshold());
+        intent.putExtra(Constants.KEY_NAME, card.getName());
+        intent.putExtra(Constants.KEY_POSITION, cards.indexOf(card));
+        intent.putExtra(Constants.KEY_CARD, card.getCardNumber());
+        intent.putExtra(Constants.KEY_MAIN_THRESHOLD, card.getMainThreshold());
+        intent.putExtra(Constants.KEY_ADD_THRESHOLD, card.getAddThreshold());
         intent.putExtra(Constants.KEY_COLOR, card.getColor());
         if (card.getImageURL() != null)
-        intent.putExtra(Constants.KEY_IMAGE, card.getImageURL());
+            intent.putExtra(Constants.KEY_IMAGE, card.getImageURL());
         startActivityForResult(intent, Constants.ADD_CARD, options.toBundle());
 
+
+    }
+
+    private String getDeviceId() {
+        final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(TELEPHONY_SERVICE);
+        final String tmDevice, tmSerial, androidId;
+        String deviceId = null;
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            tmDevice = "" + tm.getDeviceId();
+            tmSerial = "" + tm.getSimSerialNumber();
+            androidId = "" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
+            UUID deviceUuid = new UUID(androidId.hashCode(), ((long) tmDevice.hashCode() << 32) | tmSerial.hashCode());
+            deviceId = deviceUuid.toString();
+        }
+        return deviceId;
 
     }
 }
