@@ -17,4 +17,5 @@ public class Constants {
     public static final String TRANSITION_CONTAINER_NAME = "transition_name_for_container";
     public static final String KEY_ID = "id";
     public static final String FILE_NAME_BASE = "SchoolCard-";
+    public static final String KEY_CARD_DELETE = "command_card_delete";
 }

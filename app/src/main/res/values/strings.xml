@@ -25,4 +25,5 @@
     <string name="app_label">Школьные карты</string>
     <string name="add_label">Добавить карту</string>
     <string name="edit_label">Редактировать карту</string>
+    <string name="action_delete">Удалить</string>
 </resources>

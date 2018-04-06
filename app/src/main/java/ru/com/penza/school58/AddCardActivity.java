@@ -1,21 +1,19 @@
 package ru.com.penza.school58;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -24,17 +22,12 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -44,14 +37,11 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import id.zelory.compressor.Compressor;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 import jp.wasabeef.picasso.transformations.CropCircleTransformation;
 import ru.com.penza.school58.views.MaskedEditText;
 import yuku.ambilwarna.AmbilWarnaDialog;
 
-public class AddCardActivity extends AppCompatActivity{
+public class AddCardActivity extends AppCompatActivity {
 
     private static final String FILE_NAME_BASE = "SchoolCard-";
     private final int CAMERA_RESULT = 57;
@@ -71,13 +61,13 @@ public class AddCardActivity extends AppCompatActivity{
     @BindView(R.id.image)
     ImageView imageView;
     Unbinder unbinder;
-    private int position;
     boolean useNotification;
     private int cardColor = Color.WHITE;
     @BindView(R.id.image_container)
     public RelativeLayout imageContainer;
     private String imageURL;
     private File compressedImage;
+    protected int position = -1;
 
 
     @Override
@@ -85,13 +75,10 @@ public class AddCardActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_card);
         postponeEnterTransition();
-//        getWindow().setSharedElementEnterTransition(new MyTransitionSet());
-//        getWindow().setSharedElementExitTransition(new MyTransitionSet());
-//        postponeEnterTransition();
         unbinder = ButterKnife.bind(this);
         Intent intent = getIntent();
         position = intent.getIntExtra(Constants.KEY_POSITION, -1);
-        if (position != -1){
+        if (position != -1) {
             setTitle(R.string.edit_label);
         }
         Integer id = intent.getIntExtra(Constants.KEY_ID, -1);
@@ -99,11 +86,11 @@ public class AddCardActivity extends AppCompatActivity{
         cardColor = intent.getIntExtra(Constants.KEY_COLOR, Color.WHITE);
         editName.setText(intent.getStringExtra(Constants.KEY_NAME));
         editCard.setText(intent.getStringExtra(Constants.KEY_CARD));
-        if(id !=-1) {
+        if (id != -1) {
             String transitionNameforPhoto = Constants.TRANSITION_PHOTO_NAME + String.valueOf(id);
             String transitionNameforContainer = Constants.TRANSITION_CONTAINER_NAME + String.valueOf(id);
             imageView.setTransitionName(transitionNameforPhoto);
-            imageContainer.setTransitionName(transitionNameforContainer );
+            imageContainer.setTransitionName(transitionNameforContainer);
         }
         imageContainer.setBackgroundColor(cardColor);
         showImage();
@@ -116,13 +103,20 @@ public class AddCardActivity extends AppCompatActivity{
         scheduleStartPostponedTransition(imageView);
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (position == -1) {
+            menu.removeItem(0);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
 
-    private void showImage(){
+    private void showImage() {
         if (imageURL == null) {
             Picasso.with(this).load(R.drawable.student)
                     .transform(new CropCircleTransformation())
                     .into(imageView, myPicassoCallBack);
-        }else {
+        } else {
             Picasso.with(this).load(new File(imageURL))
                     .transform(new CropCircleTransformation())
                     .into(imageView, myPicassoCallBack);
@@ -157,15 +151,24 @@ public class AddCardActivity extends AppCompatActivity{
     private void initPreferences(Intent intent) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
-        if(!useNotification){
+        if (!useNotification) {
             editAddThreshold.setVisibility(View.INVISIBLE);
             editMainThreshold.setVisibility(View.INVISIBLE);
             labelAddThreshod.setVisibility(View.INVISIBLE);
             labelMainThreshod.setVisibility(View.INVISIBLE);
             editCard.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        }else {
-            editMainThreshold.setText(String.valueOf(intent.getIntExtra(Constants.KEY_MAIN_THRESHOLD,0)));
-            editAddThreshold.setText(String.valueOf(intent.getIntExtra(Constants.KEY_ADD_THRESHOLD,0)));
+        } else {
+            int mainThreshold = intent.getIntExtra(Constants.KEY_MAIN_THRESHOLD, -1);
+            int addThreshold = intent.getIntExtra(Constants.KEY_ADD_THRESHOLD, -1);
+            if (mainThreshold > 0){
+                editMainThreshold.setText(String.valueOf(mainThreshold));
+            }
+            if (addThreshold > 0){
+                editAddThreshold.setText(String.valueOf(addThreshold));
+            }
+
+
+
 
         }
     }
@@ -177,19 +180,25 @@ public class AddCardActivity extends AppCompatActivity{
         intent.putExtra(Constants.KEY_POSITION, position);
         intent.putExtra(Constants.KEY_NAME, editName.getText().toString());
         intent.putExtra(Constants.KEY_CARD, editCard.getText().toString());
-        if(useNotification) {
-            intent.putExtra(Constants.KEY_MAIN_THRESHOLD, Integer.parseInt(editMainThreshold.getText().toString()));
-            intent.putExtra(Constants.KEY_ADD_THRESHOLD, Integer.parseInt(editAddThreshold.getText().toString()));
+        if (useNotification) {
+            String strMainThreshold = editMainThreshold.getText().toString();
+            if (strMainThreshold != null && !strMainThreshold.isEmpty()) {
+                intent.putExtra(Constants.KEY_MAIN_THRESHOLD, Integer.parseInt(strMainThreshold));
+            }
+            String strAddThreshold = editAddThreshold.getText().toString();
+            if (strAddThreshold != null && !strAddThreshold.isEmpty()) {
+                intent.putExtra(Constants.KEY_ADD_THRESHOLD, Integer.parseInt(strAddThreshold));
+            }
         }
         intent.putExtra(Constants.KEY_IMAGE, imageURL);
         intent.putExtra(Constants.KEY_COLOR, cardColor);
-        setResult(RESULT_OK,intent);
+        setResult(RESULT_OK, intent);
         supportFinishAfterTransition();
 
     }
 
     @OnClick(R.id.image)
-    public void showImageDialog() {        
+    public void showImageDialog() {
         if (!isCameraAvailable(this)) {
             changeImage();
             return;
@@ -224,7 +233,7 @@ public class AddCardActivity extends AppCompatActivity{
         AmbilWarnaDialog dialog = new AmbilWarnaDialog(this, cardColor, true, new AmbilWarnaDialog.OnAmbilWarnaListener() {
             @Override
             public void onOk(AmbilWarnaDialog dialog, int color) {
-                cardColor= color;
+                cardColor = color;
                 imageContainer.setBackgroundColor(color);
                 showImage();
 
@@ -276,7 +285,7 @@ public class AddCardActivity extends AppCompatActivity{
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == RESULT_LOAD_IMG) {
-               setImage(data.getData());
+                setImage(data.getData());
             }
             if (requestCode == CAMERA_RESULT) {
                 setImage(null);
@@ -285,40 +294,55 @@ public class AddCardActivity extends AppCompatActivity{
         }
     }
 
-    private  void setImage(Uri uri){
+    private void setImage(Uri uri) {
         File actualImage = null;
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
-            try {
-                if (uri == null) {
-                    actualImage = FileUtil.from(this, Uri.parse(imageURL));
-                }else {
-                    actualImage = FileUtil.from(this, uri);
-                }
-                compressedImage = new Compressor(this).compressToFile(actualImage);
-                imageURL = getFilesDir().getPath() + FILE_NAME_BASE + timeStamp + ".jpg";
-                compressedImage.renameTo(new File(imageURL));
-                File newfile = new File(imageURL);
-                Picasso.with(this).load(newfile).transform(new CropCircleTransformation())
-                        .into(imageView);
-
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            if (uri == null) {
+                actualImage = FileUtil.from(this, Uri.parse(imageURL));
+            } else {
+                actualImage = FileUtil.from(this, uri);
             }
+            compressedImage = new Compressor(this).compressToFile(actualImage);
+            imageURL = getFilesDir().getPath() + FILE_NAME_BASE + timeStamp + ".jpg";
+            compressedImage.renameTo(new File(imageURL));
+            File newfile = new File(imageURL);
+            Picasso.with(this).load(newfile).transform(new CropCircleTransformation())
+                    .into(imageView);
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }
 
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if (position != -1 ) {
+            getMenuInflater().inflate(R.menu.menu_add_card, menu);
+        }
+        return super.onCreateOptionsMenu(menu);
+    }
 
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home){
+        if (id == android.R.id.home) {
             onBackPressed();
             return true;
+        }
+        if (id == R.id.action_delete){
+            Intent intent = new Intent();
+            intent.putExtra(Constants.KEY_POSITION, position);
+            intent.putExtra(Constants.KEY_NAME, editName.getText().toString());
+            intent.putExtra(Constants.KEY_CARD, editCard.getText().toString());
+            intent.putExtra(Constants.KEY_CARD_DELETE, true);
+            setResult(RESULT_OK, intent);
+            supportFinishAfterTransition();
+
         }
         return super.onOptionsItemSelected(item);
     }

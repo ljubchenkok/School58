@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -48,17 +49,19 @@ import ru.com.penza.school58.datamodel.Receiver;
 import ru.com.penza.school58.views.MyRecycleViewAdapter;
 
 
-public class MainActivity extends AppCompatActivity implements DatabaseCallback, MyRecycleViewAdapter.OnItemClickListener {
+public class MainActivity extends AppCompatActivity implements DatabaseCallback, MyRecycleViewAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
     @BindView(R.id.fab)
     FloatingActionButton fab;
     Unbinder unbinder;
     @BindView(R.id.recycle_view)
     RecyclerView recyclerView;
+    @BindView(R.id.swipe_container)
+    SwipeRefreshLayout swipeRefreshLayout;
     List<Card> cards;
     private MyRecycleViewAdapter adapter;
     DatabaseReference receiverRef;
     String token;
-    private static final int SETTINGS = 50;
+    protected static final int SETTINGS = 50;
     boolean useNotification;
 
 
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         LocalCacheManager.getInstance(this).getCards(this);
+
         //testing
 //        Card card = new Card("Влад", "35-000238", 0,0);
 //        card.setId(100);
@@ -97,29 +101,22 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+       getMenuInflater().inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, MyPreferenceActivity.class);
             startActivityForResult(intent, SETTINGS);
         }
-
         return super.onOptionsItemSelected(item);
     }
+
 
     @OnClick(R.id.fab)
     public void onFabClick(View view) {
@@ -132,27 +129,24 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Constants.ADD_CARD) {
             if (resultCode == RESULT_OK) {
-                Card card = new Card();
-                card.setName(data.getStringExtra(Constants.KEY_NAME));
-                card.setCardNumber(data.getStringExtra(Constants.KEY_CARD));
+                Card card = getCardFromData(data);
                 int position = data.getIntExtra(Constants.KEY_POSITION, -1);
-                card.setMainThreshold(data.getIntExtra(Constants.KEY_MAIN_THRESHOLD, 0));
-                card.setAddThreshold(data.getIntExtra(Constants.KEY_ADD_THRESHOLD, 0));
-                card.setColor(data.getIntExtra(Constants.KEY_COLOR, Color.WHITE));
-                card.setImageURL(data.getStringExtra(Constants.KEY_IMAGE));
                 if (position == -1) {
                     LocalCacheManager.getInstance(this).addCard(this, card);
                     cards.add(card);
                     adapter.setCards(cards);
                     adapter.notifyItemInserted(cards.size() - 1);
-
                 } else {
-
-                    card.setId(cards.get(position).getId());
-                    if (!cards.get(position).isEqual(card)) {
-                        cards.set(position, card);
-                        LocalCacheManager.getInstance(this).updateCard(this, card);
-                        adapter.notifyItemChanged(position);
+                    boolean cardDelete = data.getBooleanExtra(Constants.KEY_CARD_DELETE,false);
+                    if (cardDelete){
+                        deleteCard(cards.get(position));
+                    } else {
+                        card.setId(cards.get(position).getId());
+                        if (!cards.get(position).isEqual(card)) {
+                            cards.set(position, card);
+                            LocalCacheManager.getInstance(this).updateCard(this, card);
+                            adapter.notifyItemChanged(position);
+                        }
                     }
 
                 }
@@ -171,6 +165,17 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         }
     }
 
+    private Card getCardFromData(Intent data) {
+        Card card = new Card();
+        card.setName(data.getStringExtra(Constants.KEY_NAME));
+        card.setCardNumber(data.getStringExtra(Constants.KEY_CARD));
+        card.setMainThreshold(data.getIntExtra(Constants.KEY_MAIN_THRESHOLD, 0));
+        card.setAddThreshold(data.getIntExtra(Constants.KEY_ADD_THRESHOLD, 0));
+        card.setColor(data.getIntExtra(Constants.KEY_COLOR, Color.WHITE));
+        card.setImageURL(data.getStringExtra(Constants.KEY_IMAGE));
+        return card;
+    }
+
     private void sendDataToFirebase() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
@@ -186,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     @Override
     public void onCardsLoaded(final List<Card> cards) {
         this.cards = cards;
+        swipeRefreshLayout.setOnRefreshListener(this);
         intitRecyclerView();
         sendDataToFirebase();
 
@@ -206,8 +212,8 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     };
 
     private void deleteCard(Card card) {
-        LocalCacheManager.getInstance(this).deleteCard(this, card);
         int index = cards.indexOf(card);
+        LocalCacheManager.getInstance(this).deleteCard(this, card);
         cards.remove(card);
         adapter.notifyItemRemoved(index);
     }
@@ -296,5 +302,14 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         }
         return deviceId;
 
+    }
+
+
+    @Override
+    public void onRefresh() {
+        for (int i=0; i<cards.size();i++){
+            adapter.notifyItemChanged(i);
+        }
+        swipeRefreshLayout.setRefreshing(false);
     }
 }
