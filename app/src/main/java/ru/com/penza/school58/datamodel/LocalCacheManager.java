@@ -47,6 +47,16 @@ public class LocalCacheManager {
             }
         });
     }
+    public void findCardbyId(final DatabaseCallback databaseCallback, int id) {
+        db.cardDao().findById(id).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<Card>() {
+            @Override
+            public void accept(@io.reactivex.annotations.NonNull Card card) throws Exception {
+                databaseCallback.onCardLoaded(card);
+
+            }
+        });
+    }
+
     public void findCardbyName(final DatabaseCallback databaseCallback, String name, String card) {
         db.cardDao().findByName(name, card).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<Card>() {
             @Override

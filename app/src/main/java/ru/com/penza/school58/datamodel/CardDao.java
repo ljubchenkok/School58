@@ -18,8 +18,8 @@ public interface CardDao {
     @Query("SELECT * FROM card")
     Maybe<List<Card>> getAll();
 
-    @Query("SELECT * FROM card WHERE id IN (:cardIds)")
-    Flowable<List<Card>> loadAllByIds(int[] cardIds);
+    @Query("SELECT * FROM card WHERE id = :cardId")
+    Maybe<Card> findById (int cardId);
 
     @Query("SELECT * FROM card WHERE name LIKE :name AND "
             + "cardNumber LIKE :cardNumber LIMIT 1")
