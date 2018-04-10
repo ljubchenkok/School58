@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -51,27 +52,29 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService  implem
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent, PendingIntent.FLAG_ONE_SHOT);
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification);
+        RemoteViews remoteViewsSmall = new RemoteViews(getPackageName(), R.layout.notification_small);
+        remoteViewsSmall.setTextViewText(R.id.textView, body);
         remoteViews.setTextViewText(R.id.textView, body);
         remoteViews.setTextViewText(R.id.textViewTitle, title);
         remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent);
 
         Notification.Builder builder = new Notification.Builder(this)
-                .setSmallIcon(R.mipmap.ic_dinner)
+                .setSmallIcon(R.drawable.ic_stat_local_dining)
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);
 
+
         Notification notification;
-        builder.setColor(card.getColor());
-        builder.setPriority(Notification.PRIORITY_HIGH);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder.setStyle(new Notification.DecoratedCustomViewStyle())
-                    .setCustomContentView(remoteViews)
+                    .setCustomContentView(remoteViewsSmall)
                     .setCustomBigContentView(remoteViews);
             notification = builder.build();
         }
         else {
             notification= builder.build();
             notification.bigContentView = remoteViews;
+            notification.contentView = remoteViewsSmall;
 
         }
 
