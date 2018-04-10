@@ -96,6 +96,14 @@ public class MyRecycleViewAdapter extends RecyclerView.Adapter<MyRecycleViewAdap
 
     }
 
+    public void refreshBallance(CardViewHolder holder, int position){
+        holder.message.setText("");
+        holder.progressBar.setVisibility(View.VISIBLE);
+        getBallance(holder, position);
+
+    }
+
+
     private void getBallance(final CardViewHolder holder, int position) {
         SOService service = ApiUtils.getSOService();
         service.getAnswer(cards.get(position).getCardNumber(), ACT).enqueue(new Callback<Message>() {

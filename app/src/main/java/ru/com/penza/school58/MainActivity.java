@@ -308,7 +308,9 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     @Override
     public void onRefresh() {
         for (int i=0; i<cards.size();i++){
-            adapter.notifyItemChanged(i);
+            MyRecycleViewAdapter.CardViewHolder holder  =  (MyRecycleViewAdapter.CardViewHolder) recyclerView.findViewHolderForAdapterPosition(i);
+            adapter.refreshBallance(holder, i);
+//            adapter.notifyItemChanged(i);
         }
         swipeRefreshLayout.setRefreshing(false);
     }
