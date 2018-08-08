@@ -1,13 +1,14 @@
 package ru.com.penza.school58;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -26,15 +27,12 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.Toast;
 
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -50,6 +48,7 @@ import ru.com.penza.school58.views.MyRecycleViewAdapter;
 
 
 public class MainActivity extends AppCompatActivity implements DatabaseCallback, MyRecycleViewAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
+    private static final int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 87;
     @BindView(R.id.fab)
     FloatingActionButton fab;
     Unbinder unbinder;
@@ -63,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     String token;
     protected static final int SETTINGS = 50;
     boolean useNotification;
+    private String deviceId;
 
 
     @Override
@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         super.onCreate(savedInstanceState);
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         setContentView(R.layout.activity_main);
+        setTitle(R.string.main_label);
         unbinder = ButterKnife.bind(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -84,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         ////
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
+        useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), true);
         intitFirebase();
 
 
@@ -94,16 +95,19 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         receiverRef = database.getReference("receivers");
         if (useNotification) {
+            setDeviceId();
             token = FirebaseInstanceId.getInstance().getToken();
         } else {
-            receiverRef.child(getDeviceId()).removeValue();
+            if (deviceId!= null && !deviceId.isEmpty()) {
+                receiverRef.child(deviceId).removeValue();
+            }
         }
 
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-       getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -112,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, MyPreferenceActivity.class);
+            intent.putExtra(Constants.KEY_USE_NOTIFICATION, useNotification);
             startActivityForResult(intent, SETTINGS);
         }
         return super.onOptionsItemSelected(item);
@@ -137,8 +142,8 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
                     adapter.setCards(cards);
                     adapter.notifyItemInserted(cards.size() - 1);
                 } else {
-                    boolean cardDelete = data.getBooleanExtra(Constants.KEY_CARD_DELETE,false);
-                    if (cardDelete){
+                    boolean cardDelete = data.getBooleanExtra(Constants.KEY_CARD_DELETE, false);
+                    if (cardDelete) {
                         deleteCard(cards.get(position));
                     } else {
                         card.setId(cards.get(position).getId());
@@ -155,11 +160,12 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         if (requestCode == SETTINGS) {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
-            if (!useNotification) {
-                receiverRef.child(getDeviceId()).removeValue();
+            if (!useNotification && deviceId != null && !deviceId.isEmpty()) {
+                receiverRef.child(deviceId).removeValue();
             }
             if (useNotification) {
-                sendDataToFirebase();
+                setDeviceId();
+
             }
 
         }
@@ -179,8 +185,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
     private void sendDataToFirebase() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean useNotification = sharedPreferences.getBoolean(getString(R.string.key_notification), false);
-        String deviceId = getDeviceId();
-        if (useNotification && token != null && deviceId != null) {
+        if (useNotification && token != null && deviceId != null && !deviceId.isEmpty()) {
             Receiver receiver = new Receiver(token, cards);
             receiverRef.child(deviceId).setValue(receiver);
         }
@@ -229,16 +234,24 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     @Override
     public void onCardDeleted() {
-        if(useNotification) {
-            sendDataToFirebase();
+        if (useNotification) {
+            if (deviceId !=null && !deviceId.isEmpty()){
+                sendDataToFirebase();
+            } else {
+                setDeviceId();
+            }
+
+
         }
 
     }
 
     @Override
     public void onCardAdded() {
-        if(useNotification) {
+        if (deviceId !=null && !deviceId.isEmpty()){
             sendDataToFirebase();
+        } else {
+            setDeviceId();
         }
     }
 
@@ -249,8 +262,10 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
 
     @Override
     public void onCardUpdated() {
-        if(useNotification) {
+        if (deviceId !=null && !deviceId.isEmpty()){
             sendDataToFirebase();
+        } else {
+            setDeviceId();
         }
 
     }
@@ -284,31 +299,57 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback,
         if (card.getImageURL() != null)
             intent.putExtra(Constants.KEY_IMAGE, card.getImageURL());
         startActivityForResult(intent, Constants.ADD_CARD, options.toBundle());
-
-
     }
 
-    private String getDeviceId() {
-        final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(TELEPHONY_SERVICE);
-        final String tmDevice, tmSerial, androidId;
-        String deviceId = null;
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+
+    public void setDeviceId() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE},
+                    MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
+        } else {
+            final String tmDevice, tmSerial, androidId;
+            final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(TELEPHONY_SERVICE);
             tmDevice = "" + tm.getDeviceId();
             tmSerial = "" + tm.getSimSerialNumber();
             androidId = "" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-
             UUID deviceUuid = new UUID(androidId.hashCode(), ((long) tmDevice.hashCode() << 32) | tmSerial.hashCode());
             deviceId = deviceUuid.toString();
-        }
-        return deviceId;
+            if (useNotification) {
+                sendDataToFirebase();
+            }
 
+        }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_PHONE_STATE) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+               setDeviceId();
+            } else {
+                disableNotification();
+                Toast.makeText(this,getString(R.string.key_notification_disabled),Toast.LENGTH_SHORT).show();
+
+
+            }
+        }
+    }
+
+    private void disableNotification() {
+        useNotification = false;
+        SharedPreferences  pref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.remove(getString(R.string.key_notification));
+        editor.putBoolean(getString(R.string.key_notification),false);
+        editor.commit();
+    }
 
     @Override
     public void onRefresh() {
-        for (int i=0; i<cards.size();i++){
-            MyRecycleViewAdapter.CardViewHolder holder  =  (MyRecycleViewAdapter.CardViewHolder) recyclerView.findViewHolderForAdapterPosition(i);
+        for (int i = 0; i < cards.size(); i++) {
+            MyRecycleViewAdapter.CardViewHolder holder = (MyRecycleViewAdapter.CardViewHolder) recyclerView.findViewHolderForAdapterPosition(i);
             adapter.refreshBallance(holder, i);
 //            adapter.notifyItemChanged(i);
         }

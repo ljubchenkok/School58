@@ -1,5 +1,6 @@
 package ru.com.penza.school58;
 
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -31,6 +33,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -68,6 +71,7 @@ public class AddCardActivity extends AppCompatActivity {
     private String imageURL;
     private File compressedImage;
     protected int position = -1;
+    private File photoFile;
 
 
     @Override
@@ -160,14 +164,12 @@ public class AddCardActivity extends AppCompatActivity {
         } else {
             int mainThreshold = intent.getIntExtra(Constants.KEY_MAIN_THRESHOLD, -1);
             int addThreshold = intent.getIntExtra(Constants.KEY_ADD_THRESHOLD, -1);
-            if (mainThreshold > 0){
+            if (mainThreshold > 0) {
                 editMainThreshold.setText(String.valueOf(mainThreshold));
             }
-            if (addThreshold > 0){
+            if (addThreshold > 0) {
                 editAddThreshold.setText(String.valueOf(addThreshold));
             }
-
-
 
 
         }
@@ -234,8 +236,9 @@ public class AddCardActivity extends AppCompatActivity {
             @Override
             public void onOk(AmbilWarnaDialog dialog, int color) {
                 cardColor = color;
-                imageContainer.setBackgroundColor(color);
                 showImage();
+                imageContainer.setBackgroundColor(color);
+
 
             }
 
@@ -248,21 +251,42 @@ public class AddCardActivity extends AppCompatActivity {
     }
 
     private void createPhoto() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        String timeStamp =
-                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String fileName = FILE_NAME_BASE + timeStamp + ".jpg";
-        File file = new File(
-                Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_PICTURES
-                ),
-                fileName
-        );
-        Uri myPhotoUri = Uri.fromFile(file);
-        imageURL = myPhotoUri.toString();
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, myPhotoUri);
-        startActivityForResult(intent, CAMERA_RESULT);
+        Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (pictureIntent.resolveActivity(getPackageManager()) != null) {
+
+
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                ///Do something
+            }
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this, "ru.com.penza.provider", photoFile);
+                pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(pictureIntent, CAMERA_RESULT);
+            }
+        }
     }
+
+    private File createImageFile() throws IOException {
+        String timeStamp =
+                new SimpleDateFormat("yyyyMMdd_HHmmss",
+                        Locale.getDefault()).format(new Date());
+        String imageFileName = "IMG_" + timeStamp + "_";
+        File storageDir =
+                getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        imageURL = image.getAbsolutePath();
+        return image;
+    }
+
+
+
 
     private boolean isCameraAvailable(AddCardActivity addCardActivity) {
         final PackageManager packageManager = getPackageManager();
@@ -300,7 +324,9 @@ public class AddCardActivity extends AppCompatActivity {
 
         try {
             if (uri == null) {
-                actualImage = FileUtil.from(this, Uri.parse(imageURL));
+//                actualImage = FileUtil.from(this, Uri.parse(imageURL));
+                actualImage = photoFile;
+
             } else {
                 actualImage = FileUtil.from(this, uri);
             }
@@ -320,7 +346,7 @@ public class AddCardActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (position != -1 ) {
+        if (position != -1) {
             getMenuInflater().inflate(R.menu.menu_add_card, menu);
         }
         return super.onCreateOptionsMenu(menu);
@@ -334,7 +360,7 @@ public class AddCardActivity extends AppCompatActivity {
             onBackPressed();
             return true;
         }
-        if (id == R.id.action_delete){
+        if (id == R.id.action_delete) {
             Intent intent = new Intent();
             intent.putExtra(Constants.KEY_POSITION, position);
             intent.putExtra(Constants.KEY_NAME, editName.getText().toString());

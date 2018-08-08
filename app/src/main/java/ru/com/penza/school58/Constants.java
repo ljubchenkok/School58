@@ -18,4 +18,5 @@ public class Constants {
     public static final String KEY_ID = "id";
     public static final String FILE_NAME_BASE = "SchoolCard-";
     public static final String KEY_CARD_DELETE = "command_card_delete";
+    public static final String KEY_USE_NOTIFICATION = "use_notification";
 }

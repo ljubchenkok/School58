@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">School58</string>
+    <string name="app_name">Школа58</string>
     <string name="action_settings">Настройки</string>
 
     <!-- TODO: Remove or change this placeholder text -->
@@ -22,8 +22,12 @@
     <string name="key_notification">key_notification</string>
     <string name="notificationLabel">Уведомления</string>
     <string name="key_token">key_token</string>
-    <string name="app_label">Школьные карты</string>
+    <string name="app_label">Школа58</string>
+    <string name="main_label">Школьные карты</string>
     <string name="add_label">Добавить карту</string>
     <string name="edit_label">Редактировать карту</string>
     <string name="action_delete">Удалить</string>
+    <string name="key_notification_disabled">Уведомления отключены</string>
+    <string name="channel_name">my_channel</string>
+    <string name="channel_description">channel_description</string>
 </resources>

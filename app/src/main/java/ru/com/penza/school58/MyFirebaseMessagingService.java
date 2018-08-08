@@ -1,11 +1,8 @@
 package ru.com.penza.school58;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -16,7 +13,6 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +23,10 @@ import ru.com.penza.school58.datamodel.LocalCacheManager;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService  implements DatabaseCallback {
     private static final String TAG = "MyFirebaseMsgService";
+    private static final String CHANNEL_ID = "MY_CHANNEL_0";
     String body;
     String title;
+    NotificationHelper notificationHelper;
 
 
 
@@ -41,6 +39,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService  implem
         LocalCacheManager.getInstance(getApplicationContext()).findCardbyId(this,id);
 
     }
+
 
 
 
@@ -125,7 +124,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService  implem
 
     @Override
     public void onCardLoaded(Card card) {
-        sendCustomNotification(title,body, card);
+        //sendCustomNotification(title,body, card);
+        if (notificationHelper == null) {
+            notificationHelper = new NotificationHelper(getApplicationContext());
+        }
+        notificationHelper.createNotification(title,body, card);
 
     }
+
+
+
+
+
+
+
+
 }
