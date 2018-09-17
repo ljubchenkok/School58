@@ -32,6 +32,7 @@ public class NotificationHelper {
     private NotificationManager mNotificationManager;
     private NotificationCompat.Builder mBuilder;
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
+    private int notificationID=0;
 
     public NotificationHelper(Context context) {
         mContext = context;
@@ -80,7 +81,8 @@ public class NotificationHelper {
             mNotificationManager.createNotificationChannel(notificationChannel);
         }
         assert mNotificationManager != null;
-        mNotificationManager.notify(0 /* Request Code */, mBuilder.build());
+        mNotificationManager.notify(notificationID /* Request Code */, mBuilder.build());
+        notificationID++;
     }
 
     private Bitmap getBitmapfromUri(Uri selectedFileUri) {
